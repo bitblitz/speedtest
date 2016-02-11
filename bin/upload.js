@@ -3,7 +3,7 @@
 var http = require('http'),
     fs = require('fs');
 
-// arguments: IP, size(MB), count
+// arguments: IP, size(MB), count, repeat
 // node ./upload.js 10.6.1.203 2
 process.argv.shift(); // skip node
 process.argv.shift(); // skip script name
@@ -13,6 +13,7 @@ var opts = {
     size: process.argv.shift(),
     maxUploadIterations: process.argv.shift(),
     uploadIterations : 0,
+    cycleLength: process.argv.shift(),
 };
 if (opts.size == 0 || isNaN(opts.size))
 {
@@ -22,6 +23,10 @@ if (opts.size == 0 || isNaN(opts.size))
 if (opts.maxUploadIterations == 0 || isNaN(opts.maxUploadIterations))
 {
     opts.maxUploadIterations = 3
+}
+if (opts.cycleLength == 0 || isNaN(opts.cycleLength))
+{
+    opts.cycleLength = 20
 }
 
 opts.size = opts.size * 1024 * 1024; // convert to MB
@@ -100,7 +105,7 @@ function sendOne(iteration, size, whendone)
                   if(addi.size >= 1048576 && addi.size < 1073741824) return (addi.size/1048576) + "MB";
                 };
 
-                console.log(iteration + ": Size: " + addi.friendlySize() + " Time-ms: " + addi.runningTime + " Rate:" + addi.speed.bitrate());
+                console.log("T:" + iteration + " Size:" + (addi.size/1048576) + " TimeMs:" + addi.runningTime + " Rate:" + addi.speed.Mbps);
                 //console.log(text);
                 whendone();
             })
@@ -129,7 +134,7 @@ function next(index, size) {
     }
 
     // setup next callback
-    var newsize = (1+((index+1) % 20)) * opts.size;
+    var newsize = (1+((index+1) % opts.cycleLength)) * opts.size;
     var nextCallback = next.bind(null, index + 1, newsize);
 
     sendOne(index, size, nextCallback);
