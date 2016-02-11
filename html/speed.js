@@ -332,14 +332,14 @@ var speedtest = (function() {
           addi.speed.Kbps = (addi.speed.bps/1024).toFixed(2);
           addi.speed.Mbps = (addi.speed.bps/1024/1024).toFixed(2);
           addi.speed.bitrate = (function () {
-            if(addi.speed.Bps < 1024) return addi.speed.Kbps + "b";
-            if(addi.speed.Bps >= 1024 && addi.speed.Bps < 1048576) return addi.speed.Kbps + "Kb";
-            if(addi.speed.Bps >= 1048576 && addi.speed.Bps < 1073741824) return addi.speed.Mbps + "Mb";
+            if(addi.speed.Bps < 1024) return addi.speed.Kbps + "bps";
+            if(addi.speed.Bps >= 1024 && addi.speed.Bps < 1048576) return addi.speed.Kbps + "Kbps";
+            if(addi.speed.Bps >= 1048576 && addi.speed.Bps < 1073741824) return addi.speed.Mbps + "Mbps";
           })();
           addi.speed.byterate = addi.speed.bitrate.toUpperCase();
 
           addi.friendlySize = (function () {
-            if(addi.size < 1024) return addi.size + "b";
+            if(addi.size < 1024) return addi.size + "B";
             if(addi.size >= 1024 && addi.size < 1048576) return (addi.size/1024) + "KB";
             if(addi.size >= 1048576 && addi.size < 1073741824) return (addi.size/1048576) + "MB";
           })();
