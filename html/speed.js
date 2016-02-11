@@ -71,7 +71,7 @@ testresult.prototype.adddp = function(_dp) {
 
 var createresultcollection = function(results) {
   //opts.instanceResults from completed test instance.
-  
+
   var ro = {
     up: {
         results: []
@@ -114,7 +114,7 @@ var createresultcollection = function(results) {
     //if(!ro.stats.average) ro.stats.average = results[v];
     if(!ro[d].stats.mean) ro[d].stats.mean = results[v];
     if(!ro[d].stats.fast) ro[d].stats.fast = results[v];
-    
+
     if(!ro.startTime) ro.startTime = vo.first.startTime;
     if(!ro.endTime) ro.endTime = vo.last.endTime;
 
@@ -133,7 +133,7 @@ var createresultcollection = function(results) {
 
   Object.keys(directions).forEach(function(d) {
     var speedsort = k.map(function(v) { return results[v].id; });
-    
+
     speedsort.sort(function(a,b) {
       return results[a].last.speed.Bps - results[b].last.speed.Bps;
     });
@@ -144,7 +144,7 @@ var createresultcollection = function(results) {
 
     ro.runningTime += ro[d].runningTime;
   });
-  
+
 
   return ro;
 };
@@ -168,7 +168,7 @@ var speedtest = (function() {
 
   node.inherits(st, node.EventEmitter);
   st.prototype.downtests = function(start, _id, _opts, oncomplete) {
-    
+
     var self = this;
 
     var opts = {};
@@ -182,12 +182,11 @@ var speedtest = (function() {
       node.inherits(tmp, node.EventEmitter);
       return new tmp();
     })();
-    var _startTime = Date.now();
 
     if(start > state.conf.maxDownloadSize() || state.stop()) {
       if(state.stop()) state.stop(false);
       if(typeof oncomplete == 'function') self.once(oncomplete);
-      if(!opts.upload) { 
+      if(!opts.upload) {
         var ro = createresultcollection(opts.instanceResults);
         self.emit('complete', ro);
         state.allresults.unshift(ro);
@@ -201,6 +200,8 @@ var speedtest = (function() {
     var tro = new testresult([_id, Date.now(), start].join(':'), 'down');
     opts.instanceResults = opts.instanceResults || {};
     opts.instanceResults[tro.id] = tro;
+
+    var _startTime = Date.now();
 
     var testconn = $.ajax({
       url: './download?size=' + start
@@ -251,7 +252,7 @@ var speedtest = (function() {
     testconn.done(function() {
       tro.complete = true;
     });
-    
+
     testconn.always(function() {
       self.emit('testcomplete', tro.error, tro);
       opts.events.emit('testcomplete', tro.error, tro);
@@ -276,14 +277,12 @@ var speedtest = (function() {
       return new tmp();
     })();
 
-    var _startTime = Date.now();
-
     if(start > state.conf.maxUploadSize() || opts.uploadIterations >= opts.maxUploadIterations || state.stop()) {
       if(state.stop()) state.stop(false);
       var ro = createresultcollection(opts.instanceResults);
 
       if(typeof oncomplete == 'function') self.once(oncomplete);
-      
+
       self.emit('complete', ro);
       state.allresults.unshift(ro);
       state.currenttest(null);
@@ -293,19 +292,25 @@ var speedtest = (function() {
     var tro = new testresult([_id, Date.now(), start].join(':'), 'up');
     opts.instanceResults = opts.instanceResults || {};
     opts.instanceResults[tro.id] = tro;
-    
+
     //size the upload data correctly.
-    if(state.upload_data.length > start) {
-        state.upload_data = state.upload_data.slice(0, start);
+
+    function randomInt (low, high) {
+        return Math.floor(Math.random() * (high - low) + low);
     }
-    for(var i = 0; state.upload_data.length < start; i++) {
-        state.upload_data.push(0);
+    state.upload_data = new ArrayBuffer(start);
+    var view   = new Uint8Array(state.upload_data);
+    for(var i = 0; i < state.upload_data.length; i++) {
+        view[i] = randomInt(0,256);
     }
+
+    // now that data is computed, start the timer.
+    var _startTime = Date.now();
 
     var testconn = $.ajax('./upload?size=' + start, {
         type: "post"
         ,processData: false
-        ,contentType: "image/png"
+        ,contentType: "application/octet-stream"
         ,headers: {}
         ,progress: function(e) {
           var p = ((e.loaded/e.total) * 100).toFixed(2);
@@ -343,7 +348,7 @@ var speedtest = (function() {
           opts.events.emit('progress', p, addi, tro);
           state.currenttest(createresultcollection(JSON.parse(JSON.stringify(opts.instanceResults))));
         }
-        ,data: state.upload_data.join("")
+        ,data: state.upload_data
     }).error(function() {
       tro.error = "An error occured";
       self.emit('error', tro);
@@ -370,17 +375,17 @@ $(document).ready(function() {
         $.get("./ip", function(res) {
             $("#remoteip").text(res)
         });
-        
+
         $.get("./conf", null, function(conf) {
             for(var prop in conf) {
                 var pi = $(document.createElement('div'));
                 var ni = $(document.createElement('input')).attr('type', 'text').attr('id', prop).attr('value', conf[prop]);
                 var li = $(document.createElement('label')).text(prop).attr("for", prop);
-                
+
                 ni.blur(function(ob) {
                     $(ob.target).val(expandshortcodes($(ob.target).val()));
                 });
-                
+
                 pi.append(li);
                 pi.append(ni);
                 $("#config").append(pi);
@@ -391,6 +396,6 @@ $(document).ready(function() {
             }, 500);
         }, 'json');
     } catch(e) {
-        
+
     }
 });

@@ -22,6 +22,14 @@ opts.url.push({target: '/download', cb: function(req, res) {
     res.writeHead(200, {'Content-length': max});
     var b = new Buffer(1024);
     b.fill(0x0);
+
+    function randomInt (low, high) {
+        return Math.floor(Math.random() * (high - low) + low);
+    }
+    for(var i = 0; i < b.length ; i++) {
+        b[i] = randomInt(0,256);
+    }
+
     for(var i = 0; i < max; i += 1024) {
         res.write((max - i >= 1024)?b:b.slice(0,max%1024));
     }
@@ -86,23 +94,26 @@ var file_types = {
     ,html: "text/html"
 }
 var httpd = http.createServer(function(req, res) {
-    
+
     //force close of long lasting requests. Hax?
-    setTimeout((function(){
+    var timeoutId = setTimeout((function(){
+        console.log("Killing timeout connection: > " + _config.ultimateTimeout + " secs");
         this.res.end();
     }).bind({res: res}), _config.ultimateTimeout);
-    
+
     var uploadsize = 0;
     req.body = new Buffer(0);
     req.on("data", function(d) {
         uploadsize += d.length;
         if(uploadsize > opts.limits.maxUploadSize) {
             //Kill it! Kill it with fire!
+            console.log("Killing upload connection too large: " + uploadsize + " > " + opts.limits.maxUploadSize);
+
             req.connection.destroy();
         }
-        req.body = Buffer.concat([req.body, d], (req.body.length + d.length));
+        //console.log("data..." + uploadsize + " " + d.length);
+        //req.body = Buffer.concat([req.body, d], (req.body.length + d.length));
     });
-    
     var route = null
     var urlpath = url.parse(req.url.replace("//","/")).pathname;
     opts.url.forEach(function(cv) {
@@ -117,6 +128,7 @@ var httpd = http.createServer(function(req, res) {
         route = opts.url[opts.url.length-1];
     }
     req.on('end', function() {
+        clearTimeout(timeoutId);
         route.cb.call(this, req, res);
     });
     if(req.resume) req.resume();
