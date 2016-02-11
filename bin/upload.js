@@ -3,18 +3,25 @@
 var http = require('http'),
     fs = require('fs');
 
-process.argv.shift();
-process.argv.shift();
+// arguments: IP, size(MB), count
+// node ./upload.js 10.6.1.203 2
+process.argv.shift(); // skip node
+process.argv.shift(); // skip script name
 
 var opts = {
+    ip: process.argv.shift(),
     size: process.argv.shift(),
-    maxUploadIterations: 100,
+    maxUploadIterations: process.argv.shift(),
     uploadIterations : 0,
 };
 if (opts.size == 0 || isNaN(opts.size))
 {
-    console.log("invalid size:" + size);
-    process.exit(1);
+    opts.size = 1
+}
+
+if (opts.maxUploadIterations == 0 || isNaN(opts.maxUploadIterations))
+{
+    opts.maxUploadIterations = 3
 }
 
 opts.size = opts.size * 1024 * 1024; // convert to MB
@@ -36,7 +43,7 @@ function bufferOfSize(size)
 function sendOne(iteration, size, whendone)
 {
     var post_options = {
-        host: '127.0.0.1',
+        host: opts.ip,
         path: '/upload?size=' + size,
         port: 8080,
         timeout: 120000,
@@ -114,7 +121,7 @@ function sendOne(iteration, size, whendone)
     return sender;
 }
 
-var maxUploadIterations = 100;
+var maxUploadIterations = 10;
 function next(index, size) {
     // termination condition
     if (index >= opts.maxUploadIterations) {
@@ -122,7 +129,7 @@ function next(index, size) {
     }
 
     // setup next callback
-    var newsize = (1+(index % 20)) * 1024 * 1024;
+    var newsize = (1+((index+1) % 20)) * opts.size;
     var nextCallback = next.bind(null, index + 1, newsize);
 
     sendOne(index, size, nextCallback);
