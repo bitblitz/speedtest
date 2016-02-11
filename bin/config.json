@@ -1,17 +1,18 @@
 {
     "ip": "0.0.0.0"
     ,"port": "8080"
-    ,"ultimateTimeout": "120"
+    ,"ultimateTimeout": "1000"
+    ,"showBitsPerSec":"1"
     ,"limits": {
         "downloadStartSize": "131072"
         ,"uploadStartSize": "2097152"
         ,"downloadSizeModifier": "2"
-        ,"uploadSizeModifier": "1"
+        ,"uploadSizeModifier": "2"
         ,"maxDownloadSize": "52428800"
-        ,"maxUploadSize": "20971520"
+        ,"maxUploadSize": "209715200"
         ,"maxDownloadTime": "8"
-        ,"maxUploadTime": "4"
-        ,"maxUploadIterations": "5"
+        ,"maxUploadTime": "10"
+        ,"maxUploadIterations": "10"
         ,"restInterval": "0"
-    }   
+    }
 }
