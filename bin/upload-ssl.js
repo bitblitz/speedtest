@@ -1,7 +1,11 @@
 /* upload to the upload end point and measure speed */
 
-var http = require('http'),
+var http = require('https'),
     fs = require('fs');
+
+// ignore cert errors since we only want the SSL overhead, but don't really care about security
+// copy-paste this to your code at your risk.
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 // arguments: IP, size(MB), count, repeat
 // node ./upload.js 10.6.1.203 2
@@ -50,7 +54,7 @@ function sendOne(iteration, size, whendone)
     var post_options = {
         host: opts.ip,
         path: '/upload?size=' + size,
-        port: 8080,
+        port: 8081,
         timeout: 120000,
         method: 'POST',
         headers: {

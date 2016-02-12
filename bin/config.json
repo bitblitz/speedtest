@@ -1,7 +1,7 @@
 {
     "ip": "0.0.0.0"
     ,"port": "8080"
-    ,"ultimateTimeout": "1000"
+    ,"ultimateTimeout": "6000"
     ,"showBitsPerSec":"1"
     ,"limits": {
         "downloadStartSize": "131072"

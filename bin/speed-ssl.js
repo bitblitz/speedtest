@@ -1,5 +1,5 @@
-var http = require('http');
-var https = require('https');
+var http = require('https');
+
 var url = require("url");
 var fs = require("fs");
 var _config = require("./config.json");
@@ -18,12 +18,9 @@ var SslOptions = {
 var opts = {
     url: []
     ,"limits": _config.limits
-    ,"port": _config.port || 8080
-    ,"portssl": (_config.port+1) || 8081
+    ,"port": _config.port || 8081
     ,"ip": _config.ip || "0.0.0.0"
 };
-
-//opts.portssl = opts.port + 1;
 
 //'/download', '/upload', '/ip', '/conf'
 opts.url.push({target: '/download', cb: function(req, res) {
@@ -52,9 +49,7 @@ opts.url.push({target: '/download', cb: function(req, res) {
 }});
 
 opts.url.push({target: '/upload', cb: function(req, res) {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end("Upload complete:" + (Date.now() - req.speedstart) + " ms");
-    //res.end();
+    res.end();
 }});
 
 opts.url.push({target: '/ip', cb: function(req, res) {
@@ -111,17 +106,16 @@ var file_types = {
     ,html: "text/html"
 }
 
-function listener(req, res) {
-    var expectedsize = parseInt(url.parse(req.url,true).query.size);
+var httpd = http.createServer(SslOptions, function(req, res) {
+
     //force close of long lasting requests. Hax?
     var timeoutId = setTimeout((function(){
-        console.log("Killing timeout connection: > " + _config.ultimateTimeout + " ms");
+        console.log("Killing timeout connection: > " + _config.ultimateTimeout + " secs");
         this.res.end();
     }).bind({res: res}), _config.ultimateTimeout);
 
     var uploadsize = 0;
     req.body = new Buffer(0);
-    req.speedstart = Date.now();
     req.on("data", function(d) {
         uploadsize += d.length;
         if(uploadsize > opts.limits.maxUploadSize) {
@@ -148,17 +142,8 @@ function listener(req, res) {
     }
     req.on('end', function() {
         clearTimeout(timeoutId);
-        if (uploadsize != expectedsize)
-            console.log("Early Termination:" + uploadsize + " (expected: " + expectedsize + ")");
-        else
-            console.log("Complete Upload:" + uploadsize);
         route.cb.call(this, req, res);
     });
     if(req.resume) req.resume();
-}
-
-var httpd = http.createServer(listener);
+});
 httpd.listen(opts.port, opts.ip);
-
-var httpsd = https.createServer(SslOptions, listener);
-httpsd.listen(8081, opts.ip);

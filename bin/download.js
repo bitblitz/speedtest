@@ -49,13 +49,13 @@ function sendOne(iteration, size, whendone)
 {
     var post_options = {
         host: opts.ip,
-        path: '/upload?size=' + size,
+        path: '/download?size=' + size,
         port: 8080,
         timeout: 120000,
         method: 'POST',
         headers: {
-            'Content-Type': 'application/octet-stream',
-            'Content-length': size
+            'Content-Type': 'application/octet-stream'
+            //,'Content-length': size
         }
     }
 
@@ -66,7 +66,7 @@ function sendOne(iteration, size, whendone)
         if (res.statusCode < 399) {
             var text = ""
             res.on('data', function(chunk) {
-                text += chunk
+            //    text += chunk
             })
             res.on('error', function(err) {
                     // handle the error safely
@@ -106,7 +106,7 @@ function sendOne(iteration, size, whendone)
                 };
 
                 console.log("T:" + iteration + " Size:" + (addi.size/1048576) + " TimeMs:" + addi.runningTime + " Rate:" + addi.speed.Mbps);
-                console.log(text);
+                //console.log(text);
                 whendone();
             })
         } else {
